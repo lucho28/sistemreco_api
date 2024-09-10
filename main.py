@@ -63,3 +63,21 @@ def score_titulo(titulo_de_la_filmacion):
     return f"La película {titulo} fue estrenada en el año {int(año_estreno)} con un score/popularidad de {float(score):.2f}"
 
 
+@app.get("/votos_titulo/{titulo}")
+def votos_titulo(titulo_de_la_filmacion):
+    # Filtrar el DataFrame para encontrar la película con el título proporcionado
+    pelicula = data_movies[data_movies['title'] == titulo_de_la_filmacion]
+    
+    # Verificar si se encontró la película
+    if pelicula.empty:
+        return f"La película '{titulo_de_la_filmacion}' no se encontró en el dataset."
+    
+    # Obtener la cantidad de votos y el promedio de votos
+    cantidad_votos = pelicula['vote_count'].values[0]
+    promedio_votos = pelicula['vote_average'].values[0]
+    
+    # Verificar si la cantidad de votos es mayor o igual a 2000
+    if cantidad_votos >= 2000:
+        return f"La película '{titulo_de_la_filmacion}' tiene {cantidad_votos} votos con un promedio de {promedio_votos:.2f}."
+    else:
+        return f"La película '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
