@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import pandas as pd
 
 # Cargar los archivos parquet
-data_movies = pd.read_parquet('../Source/data_movies.parquet')
+data_movies = pd.read_parquet('/Source/data_movies.parquet')
 #data_credits = pd.read_parquet('datasets/credits.parquet')
 
 app = FastAPI()
