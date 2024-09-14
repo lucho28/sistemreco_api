@@ -11,41 +11,47 @@ data_movies = pd.read_parquet('Source/data_movies.parquet')
 data_credits_actores = pd.read_parquet('Source/data_credits_actores.parquet')
 data_credits_directores = pd.read_parquet('Source/data_credits_directores.parquet')
 # Recorte para utilizar en el modelo
+# Me quedo solo con el genero 'Animation'
 data_movies_recortado = data_movies[data_movies['genre_name'].str.contains('Animation', case=False, na=False)]
 
-
-# Paso 1: Procesar el texto de 'overview' usando TF-IDF
+#################################################################################   
+#                                                                               #
+#   SIMILITUD DEL COSENO                                                        #
+#                                                                               #    
+# Procesar el texto de 'overview' usando TF-IDF
 tfidf = TfidfVectorizer(stop_words='english')
-# Llenar nulos en 'overview' con cadenas vacías
+
+# Llenar nulos en 'overview' con cadenas vacías para evitar
+# errores de procesamiento y no tendra efecto en la matriz
+# de caracteristicas
 data_movies_recortado['overview'] = data_movies_recortado['overview'].fillna('')
-# Aplicar TF-IDF a la columna 'overview'
+
+# Aplicar TF-IDF a la columna 'overview' que es la que contiene la sinopsis de 
+# las peliculas.
 tfidf_matrix = tfidf.fit_transform(data_movies_recortado['overview'])
-# Paso 2: Procesar 'genre_name' usando One-Hot Encoding
+
+# Uso ona hot encoding para 'genre_name'. Tambien lleno los valores nulos
+# con cadenas vacias. Al igual que se hizo con 'overview'
 data_movies_recortado['genre_name'] = data_movies_recortado['genre_name'].fillna('')
-# One-Hot Encoding para el género
 genre_dummies = pd.get_dummies(data_movies_recortado['genre_name'])
-# Paso 3: Normalizar 'release_year'
+
+# Normalizo 'release_year' para garantizar que las variables numericas 
+# tengan una misma escala.
+# Tambien rellenamos con nulos.
 scaler = MinMaxScaler()
-# Rellenar nulos y escalar la columna de 'release_year'
 data_movies_recortado['release_year'] = data_movies_recortado['release_year'].fillna(0)
 release_year_scaled = scaler.fit_transform(data_movies_recortado[['release_year']])
-# Paso 4: Combinar las características (TF-IDF, género, y año de lanzamiento)
-# Combinar todas las características en una sola matriz
+
+# Combino las las columnas que elegi para las caracteristicas
+# (TF-IDF, genre_name, y release_year)
+# Combino todas las caracteristicas en una sola matriz
 features = hstack([tfidf_matrix, genre_dummies, release_year_scaled])
-# Paso 5: Calcular la similitud del coseno
+
+# Calcular la similitud del coseno
 cosine_sim = cosine_similarity(features)
 
 
-
 app = FastAPI()
-
-# Función auxiliar para la función "cantidad_filmaciones_mes"
-meses_nombre = ["enero", "febrero", "marzo", "abril", "mayo",
-                "junio", "julio", "agosto", "septiembre",
-                "octubre", "noviembre", "diciembre"]
-meses_numero = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-meses = dict(zip(meses_nombre, meses_numero))
-
 
 # Endpoints
 @app.get("/")
@@ -56,6 +62,22 @@ def read_root():
 # mejorar la salida
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(Mes):
+    """
+    Devuelve la cantidad de películas estrenadas en un mes especifico.
+
+    Parámetros:
+    -----------
+    Mes : str
+        El nombre del mes en español (sin acentos). Por ejemplo: "enero", "febrero", etc.
+
+    Retorna:
+    --------
+    int
+        El numero total de peliculas que se estrenaron en el mes ingresado.
+    """
+
+    # Lo siguiente es para comparar con el campo month de la fecha
+    # release_date
     meses_nombre = ["enero","febrero","marzo","abril","mayo",
                     "junio","julio","agosto","septiembre",
                     "octubre","noviembre","diciembre"]
@@ -66,35 +88,71 @@ def cantidad_filmaciones_mes(Mes):
     return int((data_movies["release_date"].dt.month == meses[Mes]).sum())
 
 
-# 3. Endpoint para crear columna de retorno
+# Endpoint para cantidad de filmaciones por dia
 @app.get("/cantidad_filmaciones_dia/{dia}")
 def cantidad_filmaciones_dia(Dia):
+    """
+    Devuelve la cantidad de peliculas estrenadas en un dia especifico de la semana.
+
+    Parametros:
+    -----------
+    Dia : str
+        El nombre del dia en español (sin acentos). Por ejemplo: "lunes", "martes", etc.
+
+    Retorna:
+    --------
+    int
+        El numero total de peliculas que se estrenaron en el dia de la semana proporcionado.
+    """
+
+    # Lo siguiente es para comparar con los dias del release_date
     dias_nombre = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"]
     dias_numero = [1,2,3,4,5,6,7]
     dias = dict(zip(dias_nombre,dias_numero))
 
     Dia = Dia.lower()
-    return int((data_movies["release_date"].dt.month == dias[Dia]).sum())
+    return int((data_movies["release_date"].dt.dayofweek == dias[Dia]).sum())
 
-# Endpoint para obtener información de una película por título
+
+# Endpoint para obtener score/popularidad de un titulo
 @app.get("/score_titulo/{titulo}")
 def score_titulo(titulo_de_la_filmacion):
-    # Buscar la fila que contiene el título
+    """
+    Devuelve el titulo, año de estreno y la popularidad de una pelicula especifica.
+
+    Parametros:
+    -----------
+    titulo_de_la_filmacion : str
+        El titulo de la pelicula a buscar. No es sensible a mayusculas/minusculas.
+
+    Retorna:
+    --------
+    str
+        Un mensaje que contiene el titulo de la pelicula, el ano de estreno y su score de popularidad.
+        Si no se encuentra la pelicula, se devuelve un mensaje indicando que no fue encontrada.
+    """
+       
+    # Busco la fila que contiene el titulo
     filmacion = data_movies[data_movies['title'].str.lower() == titulo_de_la_filmacion.lower()]
 
-    # Si no se encuentra el título, devolver un mensaje indicando eso
+    # Si no se encuentra el titulo retorno un mensaje
     if filmacion.empty:
-        return f"La película {titulo_de_la_filmacion} no fue encontrada en la base de datos."
+        return f"La pelicula {titulo_de_la_filmacion} no fue encontrada. "
     
-    # Obtener los datos de título, año y popularidad
+    # Obtener los datos de titulo, año y popularidad
     titulo = filmacion['title'].values[0]
     año_estreno = filmacion['release_year'].values[0]
     score = filmacion['popularity'].values[0]
 
     # Formatear el mensaje de retorno
-    return f"La película {titulo} fue estrenada en el año {int(año_estreno)} con un score/popularidad de {float(score):.2f}"
+    #return f"La pelicula {titulo} fue estrenada en el año {int(año_estreno)} con un score/popularidad de {float(score):.2f}"
+    return {
+        'Pelicula': titulo,
+        'Anio esrteno': año_estreno,
+        'Score/popularidad': score,
+    }
 
-
+# Endpoint para obtener los votos de un titulo
 @app.get("/votos_titulo/{titulo}")
 def votos_titulo(titulo_de_la_filmacion):
     # Filtrar el DataFrame para encontrar la película con el título proporcionado
@@ -114,6 +172,9 @@ def votos_titulo(titulo_de_la_filmacion):
     else:
         return f"La película '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
 
+
+# Endpoint para obtener informacion sobre un actor
+# cantidad de pelicula, retorno.
 @app.get("/get_actor/{nombre}")
 def get_actor(nombre_actor):
     # Filtrar el dataset de actores para obtener las películas en las que ha participado el actor
@@ -139,6 +200,9 @@ def get_actor(nombre_actor):
         'average_return': average_return
     }
 
+
+# Endpoint para obtener informacion de un director.
+# Lista de peliculas, retorno.
 @app.get("/get_director/{nombre}")
 def get_director(nombre_director):
     # Filtrar el dataset de directores para obtener las películas dirigidas por el director
@@ -165,6 +229,7 @@ def get_director(nombre_director):
     }
 
 
+# Endpoint para obtener 5 recomendaciones de un titulo dado
 @app.get("/recomendacion/{titulo}")
 def recomendacion(title):
     # Verificar si el título existe en el DataFrame
