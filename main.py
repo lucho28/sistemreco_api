@@ -11,7 +11,7 @@ data_movies = pd.read_parquet('Source/data_movies.parquet')
 data_credits_actores = pd.read_parquet('Source/data_credits_actores.parquet')
 data_credits_directores = pd.read_parquet('Source/data_credits_directores.parquet')
 # Recorte para utilizar en el modelo
-data_movies_recortado = data_movies.head(1000)
+data_movies_recortado = data_movies[data_movies['genre_name'].str.contains('Animation', case=False, na=False)]
 
 
 # Paso 1: Procesar el texto de 'overview' usando TF-IDF
