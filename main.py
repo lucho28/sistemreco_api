@@ -8,6 +8,8 @@ from sklearn.preprocessing import MinMaxScaler
 
 # Cargar los archivos parquet
 data_movies = pd.read_parquet('Source/data_movies.parquet')
+data_credits_actores = pd.read_parquet('Source/data_credits_actores.parquet')
+data_credits_directores = pd.read_parquet('Source/data_credits_directores.parquet')
 # Recorte para utilizar en el modelo
 data_movies_recortado = data_movies.head(1000)
 
@@ -111,6 +113,31 @@ def votos_titulo(titulo_de_la_filmacion):
         return f"La película '{titulo_de_la_filmacion}' tiene {cantidad_votos} votos con un promedio de {promedio_votos:.2f}."
     else:
         return f"La película '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
+
+@app.get("/get_actor/{titulo}")
+def get_actor(nombre_actor):
+    # Filtrar el dataset de actores para obtener las películas en las que ha participado el actor
+    actor_movies = data_credits_actores[data_credits_actores['actor'] == nombre_actor]
+
+    # Unir con el dataset de películas para obtener el retorno de cada película en la que el actor ha participado
+    actor_movies_with_returns = pd.merge(actor_movies, data_movies[['id', 'return']], on='id', how='left')
+
+    # Verificar si el actor ha participado en alguna película
+    if actor_movies_with_returns.empty:
+        return f"El actor {nombre_actor} no ha sido encontrado en los registros."
+
+    # Calcular el éxito total y el promedio de retorno del actor
+    total_return = actor_movies_with_returns['return'].sum()
+    movie_count = actor_movies_with_returns.shape[0]
+    average_return = actor_movies_with_returns['return'].mean()
+
+    # Devolver el éxito del actor, la cantidad de películas y el promedio de retorno
+    return {
+        'actor': nombre_actor,
+        'total_return': total_return,
+        'movie_count': movie_count,
+        'average_return': average_return
+    }
 
 @app.get("/recomendacion/{titulo}")
 def recomendacion(title):
