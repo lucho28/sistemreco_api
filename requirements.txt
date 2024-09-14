@@ -68,3 +68,4 @@ wcwidth==0.2.13
 websockets==13.0.1
 gunicorn==23.0.0
 scipy==1.14.1
+scikit-learn==1.5.2
