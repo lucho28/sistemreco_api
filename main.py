@@ -9,7 +9,7 @@ from sklearn.preprocessing import MinMaxScaler
 # Cargar los archivos parquet
 data_movies = pd.read_parquet('Source/data_movies.parquet')
 # Recorte para utilizar en el modelo
-data_movies_recortado = data_movies[["overview","genre_name","release_year"]].head(5000)
+data_movies_recortado = data_movies[["overview","genre_name","release_year"]].head(1000)
 
 
 # Paso 1: Procesar el texto de 'overview' usando TF-IDF
