@@ -85,6 +85,11 @@ def cantidad_filmaciones_mes(nombre_mes):
     meses = dict(zip(meses_nombre,meses_numero))
 
     nombre_mes = nombre_mes.lower()
+
+    # Verificar si el mes ingresado es valido
+    if nombre_mes not in meses:
+        return {'Error': f"El mes '{nombre_mes}' no es valido. Por favor ingresa un mes valido."}
+
     cantidad_pelis=  int((data_movies["release_date"].dt.month == meses[nombre_mes]).sum())
     return {
         'Total de peliculas estrenadas': cantidad_pelis,
@@ -113,6 +118,10 @@ def cantidad_filmaciones_dia(nombre_dia):
     dias = dict(zip(dias_nombre,dias_numero))
 
     nombre_dia = nombre_dia.lower()
+
+    if nombre_dia not in dias:
+        return {'Error': f"El mes '{nombre_dia}' no es valido. Por favor ingresa un mes valido."}
+
     cantidad_pelis=  int((data_movies["release_date"].dt.dayofweek == dias[nombre_dia]).sum())
     
     return {
