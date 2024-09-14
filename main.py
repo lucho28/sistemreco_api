@@ -236,9 +236,9 @@ def get_actor(nombre_actor):
         return f"El actor {nombre_actor} no ha sido encontrado en los registros."
 
     # Calcular el éxito total y el promedio de retorno del actor
-    total_retorno = actor_peliculas_retorno['return'].sum()
+    total_retorno = round(actor_peliculas_retorno['return'].sum(),3)
     cantidad_peliculas = actor_peliculas_retorno.shape[0]
-    promedio_retorno = actor_peliculas_retorno['return'].mean()
+    promedio_retorno = round(actor_peliculas_retorno['return'].mean(),2)
 
     # Devolver el éxito del actor, la cantidad de películas y el promedio de retorno
     return {
@@ -281,7 +281,7 @@ def get_director(nombre_director):
         return f"El director {nombre_director} no ha sido encontrado en los registros."
 
     # Calcular el éxito total del director (sumando el retorno de todas sus películas)
-    total_retorno = director_peliculas_detalles['return'].sum()
+    total_retorno = round(director_peliculas_detalles['return'].sum(),2)
 
     # Preparar la lista de películas con sus detalles
     peliculas_detalles = director_peliculas_detalles[['title', 'release_date', 'return', 'budget', 'revenue']]
@@ -311,13 +311,12 @@ def recomendacion(titulo):
         Si el titulo es encontrado, devuelve una lista con los titulos de las 5 peliculas mas similares.
         Si el titulo no es encontrado, devuelve un mensaje indicando que no fue encontrado en el dataset.
     """
-    titulo = titulo.lower()
     # Verificar si el titulo existe en el DataFrame
-    if titulo not in data_movies_recortado['title'].values:
+    if titulo.lower() not in data_movies_recortado['title'].str.lower().values:
         return f"No se encontro el titulo '{titulo}' en el dataset."
 
     # Obtener el índice de la película que coincide con el título
-    id = data_movies_recortado[data_movies_recortado['title'] == titulo].index[0]
+    id = data_movies_recortado[data_movies_recortado['title'].str.lower() == titulo.lower()].index[0]
 
     # Obtener las puntuaciones de similitud de coseno para esa pelicula
     sim_scores = list(enumerate(cosine_sim[id]))
@@ -333,3 +332,4 @@ def recomendacion(titulo):
 
     # Retorno la lista de las 5 peliculas mas similares
     return data_movies_recortado['title'].iloc[indices_peliculas].tolist()
+
