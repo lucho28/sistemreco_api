@@ -120,7 +120,7 @@ def cantidad_filmaciones_dia(nombre_dia):
     nombre_dia = nombre_dia.lower()
 
     if nombre_dia not in dias:
-        return {'Error': f"El mes '{nombre_dia}' no es valido. Por favor ingresa un mes valido."}
+        return {'Error': f"El dia '{nombre_dia}' no es valido. Por favor ingresa un dia valido."}
 
     cantidad_pelis=  int((data_movies["release_date"].dt.dayofweek == dias[nombre_dia]).sum())
     
@@ -168,12 +168,28 @@ def score_titulo(titulo_de_la_filmacion):
 # Endpoint para obtener los votos de un titulo
 @app.get("/votos_titulo/{titulo}")
 def votos_titulo(titulo_de_la_filmacion):
-    # Filtrar el DataFrame para encontrar la película con el título proporcionado
+    """
+    Devuelve la cantidad de votos y el promedio de votos de una pelicula especifica si tiene al menos 2000 votos.
+
+    Parametros:
+    -----------
+    titulo_de_la_filmacion : str
+        El titulo de la pelicula a buscar. No es sensible a mayusculas/minusculas.
+
+    Retorna:
+    --------
+    dict o str
+        Si la pelicula tiene al menos 2000 votos, devuelve un diccionario con el titulo, la cantidad de votos y el promedio de votos.
+        Si la pelicula tiene menos de 2000 votos, devuelve un mensaje indicando que no cumple con el minimo de votos.
+        Si la pelicula no se encuentra en el dataset, devuelve un mensaje indicando eso.
+    """
+
+    # obtengo la delicula del DataFrame
     pelicula = data_movies[data_movies['title'] == titulo_de_la_filmacion]
     
-    # Verificar si se encontró la película
+    # Si no encuentro la pelicula doy un mensaje
     if pelicula.empty:
-        return f"La película '{titulo_de_la_filmacion}' no se encontró en el dataset."
+        return f"La pelicula '{titulo_de_la_filmacion}' no se encontro. "
     
     # Obtener la cantidad de votos y el promedio de votos
     cantidad_votos = pelicula['vote_count'].values[0]
@@ -181,88 +197,138 @@ def votos_titulo(titulo_de_la_filmacion):
     
     # Verificar si la cantidad de votos es mayor o igual a 2000
     if cantidad_votos >= 2000:
-        return f"La película '{titulo_de_la_filmacion}' tiene {cantidad_votos} votos con un promedio de {promedio_votos:.2f}."
+        return {
+            'Pelicula':titulo_de_la_filmacion,
+            'Cantidad de votos': cantidad_votos,
+            'Promedio de votos': round(promedio_votos,2),
+        }
     else:
-        return f"La película '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
+        return f"La pelicula '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
 
 
 # Endpoint para obtener informacion sobre un actor
 # cantidad de pelicula, retorno.
-@app.get("/get_actor/{nombre}")
+@app.get("/get_actor/{nombre_actor}")
 def get_actor(nombre_actor):
-    # Filtrar el dataset de actores para obtener las películas en las que ha participado el actor
-    actor_movies = data_credits_actores[data_credits_actores['actor'] == nombre_actor]
+    """
+    Devuelve informacion sobre el exito de un actor basado en el retorno de las peliculas en las que ha participado.
 
-    # Unir con el dataset de películas para obtener el retorno de cada película en la que el actor ha participado
-    actor_movies_with_returns = pd.merge(actor_movies, data_movies[['id', 'return']], on='id', how='left')
+    Parametros:
+    -----------
+    nombre_actor : str
+        El nombre del actor a buscar en el dataset.
 
-    # Verificar si el actor ha participado en alguna película
-    if actor_movies_with_returns.empty:
+    Retorna:
+    --------
+    dict o str
+        Si el actor es encontrado, devuelve un diccionario con el nombre del actor, el retorno total, la cantidad de peliculas y el promedio de retorno.
+        Si el actor no es encontrado, devuelve un mensaje indicando que no fue encontrado en los registros.
+    """
+
+    # Obtengo el actor del dataset de actores para obtener las películas en las que ha participado.
+    actor_peliculas = data_credits_actores[data_credits_actores['actor'] == nombre_actor]
+
+    # Uno con el dataset de peliculas para obtener el retorno de cada pelicula.
+    actor_peliculas_retorno = pd.merge(actor_peliculas, data_movies[['id', 'return']], on='id', how='left')
+
+    # Verificar si el actor ha participado en alguna pelicula
+    if actor_peliculas_retorno.empty:
         return f"El actor {nombre_actor} no ha sido encontrado en los registros."
 
     # Calcular el éxito total y el promedio de retorno del actor
-    total_return = actor_movies_with_returns['return'].sum()
-    movie_count = actor_movies_with_returns.shape[0]
-    average_return = actor_movies_with_returns['return'].mean()
+    total_retorno = actor_peliculas_retorno['return'].sum()
+    cantidad_peliculas = actor_peliculas_retorno.shape[0]
+    promedio_retorno = actor_peliculas_retorno['return'].mean()
 
     # Devolver el éxito del actor, la cantidad de películas y el promedio de retorno
     return {
-        'actor': nombre_actor,
-        'total_return': total_return,
-        'movie_count': movie_count,
-        'average_return': average_return
+        'Actor': nombre_actor,
+        'Retorno total': total_retorno,
+        'Cantidad de peliculas': cantidad_peliculas,
+        'Promedio retorno': promedio_retorno
     }
 
 
 # Endpoint para obtener informacion de un director.
 # Lista de peliculas, retorno.
-@app.get("/get_director/{nombre}")
+@app.get("/get_director/{nombre_director}")
 def get_director(nombre_director):
-    # Filtrar el dataset de directores para obtener las películas dirigidas por el director
-    director_movies = data_credits_directores[data_credits_directores['director'] == nombre_director]
+    """
+    Devuelve informacion sobre el exito de un director basado en las peliculas que ha dirigido.
 
-    # Unir con el dataset de películas para obtener los detalles de cada película
-    director_movies_with_details = pd.merge(director_movies, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
+    Parametros:
+    -----------
+    nombre_director : str
+        El nombre del director a buscar en el dataset.
+
+    Retorna:
+    --------
+    dict o str
+        Si el director es encontrado, devuelve un diccionario con el nombre del director, el retorno total de todas sus peliculas
+        y una lista con los detalles de cada pelicula (titulo, fecha de lanzamiento, retorno, presupuesto y ganancia).
+        Si el director no es encontrado, devuelve un mensaje indicando que no fue encontrado en los registros.
+    """
+    
+    # Obtengo del dataset de directores las películas dirigidas por el director
+    director_peliculas = data_credits_directores[data_credits_directores['director'] == nombre_director]
+
+    # Uno con el dataset de peliculas para obtener los detalles de cada una
+    director_peliculas_detalles = pd.merge(director_peliculas, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
 
     # Verificar si el director ha dirigido alguna película
-    if director_movies_with_details.empty:
+    if director_peliculas_detalles.empty:
         return f"El director {nombre_director} no ha sido encontrado en los registros."
 
     # Calcular el éxito total del director (sumando el retorno de todas sus películas)
-    total_return = director_movies_with_details['return'].sum()
+    total_retorno = director_peliculas_detalles['return'].sum()
 
     # Preparar la lista de películas con sus detalles
-    peliculas_detalles = director_movies_with_details[['title', 'release_date', 'return', 'budget', 'revenue']]
+    peliculas_detalles = director_peliculas_detalles[['title', 'release_date', 'return', 'budget', 'revenue']]
 
-    # Devolver el éxito del director, el total de retorno y los detalles de cada película
+    # Aqui el exito del director, el total de retorno y los detalles de cada pelicula
     return {
-        'director': nombre_director,
-        'total_return': total_return,
-        'peliculas_detalles': peliculas_detalles
+        'Director': nombre_director,
+        'Retorno total': total_retorno,
+        'Detalles de peliculas': peliculas_detalles
     }
 
 
 # Endpoint para obtener 5 recomendaciones de un titulo dado
 @app.get("/recomendacion/{titulo}")
-def recomendacion(title):
-    # Verificar si el título existe en el DataFrame
-    if title not in data_movies_recortado['title'].values:
-        return f"No se encontró el título '{title}' en el dataset."
+def recomendacion(titulo):
+    """
+    Devuelve una lista de peliculas recomendadas en base a la similitud de coseno del titulo proporcionado.
+
+    Parametros:
+    -----------
+    title : str
+        El titulo de la pelicula para la cual se desea obtener recomendaciones. No es sensible a mayusculas/minusculas.
+
+    Retorna:
+    --------
+    list o str
+        Si el titulo es encontrado, devuelve una lista con los titulos de las 5 peliculas mas similares.
+        Si el titulo no es encontrado, devuelve un mensaje indicando que no fue encontrado en el dataset.
+    """
+
+    # Verificar si el titulo existe en el DataFrame
+    if titulo not in data_movies_recortado['title'].values:
+        return f"No se encontro el titulo '{titulo}' en el dataset."
 
     # Obtener el índice de la película que coincide con el título
-    idx = data_movies_recortado[data_movies_recortado['title'] == title].index[0]
+    id = data_movies_recortado[data_movies_recortado['title'] == titulo].index[0]
 
-    # Obtener las puntuaciones de similitud de coseno para esa película
-    sim_scores = list(enumerate(cosine_sim[idx]))
+    # Obtener las puntuaciones de similitud de coseno para esa pelicula
+    sim_scores = list(enumerate(cosine_sim[id]))
 
-    # Ordenar las películas en función de las puntuaciones de similitud
+    # Ordenar las peliculas en función de las puntuaciones de similitud
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
 
-    # Obtener los índices de las 5 películas más similares
-    sim_scores = sim_scores[1:6]  # Cambiado para obtener solo las 5 películas más similares
+    # Obtener los indices de las 5 peliculas mas similares
+    sim_scores = sim_scores[1:6]
 
-    # Obtener los índices de las películas
-    movie_indices = [i[0] for i in sim_scores]
+    # Obtener los indices de las películas
+    indices_peliculas = [i[0] for i in sim_scores]
 
-    # Retornar los títulos de las 5 películas más similares
-    return data_movies_recortado['title'].iloc[movie_indices].tolist()
+    # Retorno la lista de las 5 peliculas mas similares
+    return data_movies_recortado['title'].iloc[indices_peliculas].tolist()
