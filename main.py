@@ -60,8 +60,8 @@ def read_root():
 
 # Endpoint para cantidad de filmaciones por mes
 # mejorar la salida
-@app.get("/cantidad_filmaciones_mes/{mes}")
-def cantidad_filmaciones_mes(Mes):
+@app.get("/cantidad_filmaciones_mes/{nombre_mes}")
+def cantidad_filmaciones_mes(nombre_mes):
     """
     Devuelve la cantidad de películas estrenadas en un mes especifico.
 
@@ -84,13 +84,15 @@ def cantidad_filmaciones_mes(Mes):
     meses_numero = [1,2,3,4,5,6,7,8,9,10,11,12]
     meses = dict(zip(meses_nombre,meses_numero))
 
-    Mes = Mes.lower()
-    return int((data_movies["release_date"].dt.month == meses[Mes]).sum())
-
+    nombre_mes = nombre_mes.lower()
+    cantidad_pelis=  int((data_movies["release_date"].dt.month == meses[nombre_mes]).sum())
+    return {
+        'Total de peliculas estrenadas': cantidad_pelis,
+    }
 
 # Endpoint para cantidad de filmaciones por dia
-@app.get("/cantidad_filmaciones_dia/{dia}")
-def cantidad_filmaciones_dia(Dia):
+@app.get("/cantidad_filmaciones_dia/{nombre_dia}")
+def cantidad_filmaciones_dia(nombre_dia):
     """
     Devuelve la cantidad de peliculas estrenadas en un dia especifico de la semana.
 
@@ -110,12 +112,15 @@ def cantidad_filmaciones_dia(Dia):
     dias_numero = [1,2,3,4,5,6,7]
     dias = dict(zip(dias_nombre,dias_numero))
 
-    Dia = Dia.lower()
-    return int((data_movies["release_date"].dt.dayofweek == dias[Dia]).sum())
-
+    nombre_dia = nombre_dia.lower()
+    cantidad_pelis=  int((data_movies["release_date"].dt.dayofweek == dias[nombre_dia]).sum())
+    
+    return {
+        'Total de peliculas estrenadas': cantidad_pelis,
+    }
 
 # Endpoint para obtener score/popularidad de un titulo
-@app.get("/score_titulo/{titulo}")
+@app.get("/score_titulo/{titulo_de_la_filmacion}")
 def score_titulo(titulo_de_la_filmacion):
     """
     Devuelve el titulo, año de estreno y la popularidad de una pelicula especifica.
@@ -130,8 +135,7 @@ def score_titulo(titulo_de_la_filmacion):
     str
         Un mensaje que contiene el titulo de la pelicula, el ano de estreno y su score de popularidad.
         Si no se encuentra la pelicula, se devuelve un mensaje indicando que no fue encontrada.
-    """
-       
+    """  
     # Busco la fila que contiene el titulo
     filmacion = data_movies[data_movies['title'].str.lower() == titulo_de_la_filmacion.lower()]
 
@@ -142,15 +146,15 @@ def score_titulo(titulo_de_la_filmacion):
     # Obtener los datos de titulo, año y popularidad
     titulo = filmacion['title'].values[0]
     año_estreno = int(filmacion['release_year'].values[0])
-    score = float(filmacion['popularity'].values[0])
+    score = round(float(filmacion['popularity'].values[0]),2)
 
-    # Formatear el mensaje de retorno
-    #return f"La pelicula {titulo} fue estrenada en el año {int(año_estreno)} con un score/popularidad de {float(score):.2f}"
     return {
         'Pelicula': titulo,
         'Anio esrteno': año_estreno,
         'Score/popularidad': score,
     }
+
+
 
 # Endpoint para obtener los votos de un titulo
 @app.get("/votos_titulo/{titulo}")
