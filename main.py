@@ -114,7 +114,7 @@ def votos_titulo(titulo_de_la_filmacion):
     else:
         return f"La película '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
 
-@app.get("/get_actor/{titulo}")
+@app.get("/get_actor/{nombre}")
 def get_actor(nombre_actor):
     # Filtrar el dataset de actores para obtener las películas en las que ha participado el actor
     actor_movies = data_credits_actores[data_credits_actores['actor'] == nombre_actor]
@@ -138,6 +138,32 @@ def get_actor(nombre_actor):
         'movie_count': movie_count,
         'average_return': average_return
     }
+
+@app.get("/get_director/{nombre}")
+def get_director(nombre_director):
+    # Filtrar el dataset de directores para obtener las películas dirigidas por el director
+    director_movies = data_credits_directores[data_credits_directores['director'] == nombre_director]
+
+    # Unir con el dataset de películas para obtener los detalles de cada película
+    director_movies_with_details = pd.merge(director_movies, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
+
+    # Verificar si el director ha dirigido alguna película
+    if director_movies_with_details.empty:
+        return f"El director {nombre_director} no ha sido encontrado en los registros."
+
+    # Calcular el éxito total del director (sumando el retorno de todas sus películas)
+    total_return = director_movies_with_details['return'].sum()
+
+    # Preparar la lista de películas con sus detalles
+    peliculas_detalles = director_movies_with_details[['title', 'release_date', 'return', 'budget', 'revenue']]
+
+    # Devolver el éxito del director, el total de retorno y los detalles de cada película
+    return {
+        'director': nombre_director,
+        'total_return': total_return,
+        'peliculas_detalles': peliculas_detalles
+    }
+
 
 @app.get("/recomendacion/{titulo}")
 def recomendacion(title):
