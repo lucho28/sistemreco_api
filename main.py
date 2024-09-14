@@ -1,9 +1,38 @@
 from fastapi import FastAPI
 import pandas as pd
+from scipy.sparse import hstack
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
 
 # Cargar los archivos parquet
 data_movies = pd.read_parquet('Source/data_movies.parquet')
-#data_credits = pd.read_parquet('datasets/credits.parquet')
+# Recorte para utilizar en el modelo
+data_movies_recortado = data_movies.head(5000)
+
+
+# Paso 1: Procesar el texto de 'overview' usando TF-IDF
+tfidf = TfidfVectorizer(stop_words='english')
+# Llenar nulos en 'overview' con cadenas vacías
+data_movies_recortado['overview'] = data_movies_recortado['overview'].fillna('')
+# Aplicar TF-IDF a la columna 'overview'
+tfidf_matrix = tfidf.fit_transform(data_movies_recortado['overview'])
+# Paso 2: Procesar 'genre_name' usando One-Hot Encoding
+data_movies_recortado['genre_name'] = data_movies_recortado['genre_name'].fillna('')
+# One-Hot Encoding para el género
+genre_dummies = pd.get_dummies(data_movies_recortado['genre_name'])
+# Paso 3: Normalizar 'release_year'
+scaler = MinMaxScaler()
+# Rellenar nulos y escalar la columna de 'release_year'
+data_movies_recortado['release_year'] = data_movies_recortado['release_year'].fillna(0)
+release_year_scaled = scaler.fit_transform(data_movies_recortado[['release_year']])
+# Paso 4: Combinar las características (TF-IDF, género, y año de lanzamiento)
+# Combinar todas las características en una sola matriz
+features = hstack([tfidf_matrix, genre_dummies, release_year_scaled])
+# Paso 5: Calcular la similitud del coseno
+cosine_sim = cosine_similarity(features)
+
 
 
 app = FastAPI()
@@ -82,3 +111,27 @@ def votos_titulo(titulo_de_la_filmacion):
         return f"La película '{titulo_de_la_filmacion}' tiene {cantidad_votos} votos con un promedio de {promedio_votos:.2f}."
     else:
         return f"La película '{titulo_de_la_filmacion}' no cumple con el mínimo de 2000 votos. Tiene {cantidad_votos} votos."
+
+@app.get("/recomendacion/{titulo}")
+def recomendacion(title):
+    # Verificar si el título existe en el DataFrame
+    if title not in data_movies_recortado['title'].values:
+        return f"No se encontró el título '{title}' en el dataset."
+
+    # Obtener el índice de la película que coincide con el título
+    idx = data_movies_recortado[data_movies_recortado['title'] == title].index[0]
+
+    # Obtener las puntuaciones de similitud de coseno para esa película
+    sim_scores = list(enumerate(cosine_sim[idx]))
+
+    # Ordenar las películas en función de las puntuaciones de similitud
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+
+    # Obtener los índices de las 5 películas más similares
+    sim_scores = sim_scores[1:6]  # Cambiado para obtener solo las 5 películas más similares
+
+    # Obtener los índices de las películas
+    movie_indices = [i[0] for i in sim_scores]
+
+    # Retornar los títulos de las 5 películas más similares
+    return data_movies_recortado['title'].iloc[movie_indices]
