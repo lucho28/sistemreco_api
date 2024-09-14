@@ -141,8 +141,8 @@ def score_titulo(titulo_de_la_filmacion):
     
     # Obtener los datos de titulo, año y popularidad
     titulo = filmacion['title'].values[0]
-    año_estreno = filmacion['release_year'].values[0]
-    score = filmacion['popularity'].values[0]
+    año_estreno = int(filmacion['release_year'].values[0])
+    score = float(filmacion['popularity'].values[0])
 
     # Formatear el mensaje de retorno
     #return f"La pelicula {titulo} fue estrenada en el año {int(año_estreno)} con un score/popularidad de {float(score):.2f}"
