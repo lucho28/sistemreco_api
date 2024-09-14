@@ -134,4 +134,4 @@ def recomendacion(title):
     movie_indices = [i[0] for i in sim_scores]
 
     # Retornar los títulos de las 5 películas más similares
-    return data_movies_recortado['title'].iloc[movie_indices]
+    return data_movies_recortado['title'].iloc[movie_indices].tolist()
