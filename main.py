@@ -146,20 +146,20 @@ def score_titulo(titulo_de_la_filmacion):
         Si no se encuentra la pelicula, se devuelve un mensaje indicando que no fue encontrada.
     """  
     # Busco la fila que contiene el titulo
-    filmacion = data_movies[data_movies['title'].str.lower() == titulo_de_la_filmacion.lower()]
+    pelicula = data_movies[data_movies['title'].str.lower() == titulo_de_la_filmacion.lower()]
 
     # Si no se encuentra el titulo retorno un mensaje
-    if filmacion.empty:
+    if pelicula.empty:
         return f"La pelicula {titulo_de_la_filmacion} no fue encontrada. "
     
     # Obtener los datos de titulo, año y popularidad
-    titulo = filmacion['title'].values[0]
-    año_estreno = int(filmacion['release_year'].values[0])
-    score = round(float(filmacion['popularity'].values[0]),2)
+    titulo = pelicula['title'].values[0]
+    año_estreno = int(pelicula['release_year'].values[0])
+    score = round(float(pelicula['popularity'].values[0]),2)
 
     return {
         'Pelicula': titulo,
-        'Anio esrteno': año_estreno,
+        'Año estreno': año_estreno,
         'Score/popularidad': score,
     }
 
@@ -174,7 +174,7 @@ def votos_titulo(titulo_de_la_filmacion):
     Parametros:
     -----------
     titulo_de_la_filmacion : str
-        El titulo de la pelicula a buscar. No es sensible a mayusculas/minusculas.
+        El titulo de la pelicula a buscar. 
 
     Retorna:
     --------
@@ -185,8 +185,7 @@ def votos_titulo(titulo_de_la_filmacion):
     """
 
     # obtengo la delicula del DataFrame
-    pelicula = data_movies[data_movies['title'] == titulo_de_la_filmacion]
-    
+    pelicula = data_movies[data_movies['title'].str.lower() == titulo_de_la_filmacion.lower()]
     # Si no encuentro la pelicula doy un mensaje
     if pelicula.empty:
         return f"La pelicula '{titulo_de_la_filmacion}' no se encontro. "
@@ -226,7 +225,8 @@ def get_actor(nombre_actor):
     """
 
     # Obtengo el actor del dataset de actores para obtener las películas en las que ha participado.
-    actor_peliculas = data_credits_actores[data_credits_actores['actor'] == nombre_actor]
+    actor_peliculas = data_credits_actores[data_credits_actores['actor'].str.lower() == nombre_actor.lower()]
+
 
     # Uno con el dataset de peliculas para obtener el retorno de cada pelicula.
     actor_peliculas_retorno = pd.merge(actor_peliculas, data_movies[['id', 'return']], on='id', how='left')
@@ -270,7 +270,8 @@ def get_director(nombre_director):
     """
     
     # Obtengo del dataset de directores las películas dirigidas por el director
-    director_peliculas = data_credits_directores[data_credits_directores['director'] == nombre_director]
+    director_peliculas = data_credits_directores[data_credits_directores['director'].str.lower() == nombre_director.lower()]
+
 
     # Uno con el dataset de peliculas para obtener los detalles de cada una
     director_peliculas_detalles = pd.merge(director_peliculas, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
@@ -310,7 +311,7 @@ def recomendacion(titulo):
         Si el titulo es encontrado, devuelve una lista con los titulos de las 5 peliculas mas similares.
         Si el titulo no es encontrado, devuelve un mensaje indicando que no fue encontrado en el dataset.
     """
-
+    titulo = titulo.lower()
     # Verificar si el titulo existe en el DataFrame
     if titulo not in data_movies_recortado['title'].values:
         return f"No se encontro el titulo '{titulo}' en el dataset."
