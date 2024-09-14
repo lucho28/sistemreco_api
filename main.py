@@ -5,6 +5,7 @@ import pandas as pd
 data_movies = pd.read_parquet('Source/data_movies.parquet')
 #data_credits = pd.read_parquet('datasets/credits.parquet')
 
+
 app = FastAPI()
 
 # Función auxiliar para la función "cantidad_filmaciones_mes"
