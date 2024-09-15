@@ -54,13 +54,13 @@ cosine_sim = cosine_similarity(features)
 app = FastAPI()
 
 # Endpoints
-@app.get("/")
+@app.get('/')
 def read_root():
-    return {"message": "API funcionando correctamente"}
+    return {'message': 'API funcionando correctamente'}
 
 # Endpoint para cantidad de filmaciones por mes
 # mejorar la salida
-@app.get("/cantidad_filmaciones_mes/{nombre_mes}")
+@app.get('/cantidad_filmaciones_mes/{nombre_mes}')
 def cantidad_filmaciones_mes(nombre_mes):
     """
     Devuelve la cantidad de películas estrenadas en un mes especifico.
@@ -68,7 +68,7 @@ def cantidad_filmaciones_mes(nombre_mes):
     Parámetros:
     -----------
     Mes : str
-        El nombre del mes en español (sin acentos). Por ejemplo: "enero", "febrero", etc.
+        El nombre del mes en español (sin acentos). Por ejemplo: 'enero', 'febrero', etc.
 
     Retorna:
     --------
@@ -78,9 +78,9 @@ def cantidad_filmaciones_mes(nombre_mes):
 
     # Lo siguiente es para comparar con el campo month de la fecha
     # release_date
-    meses_nombre = ["enero","febrero","marzo","abril","mayo",
-                    "junio","julio","agosto","septiembre",
-                    "octubre","noviembre","diciembre"]
+    meses_nombre = ['enero','febrero','marzo','abril','mayo',
+                    'junio','julio','agosto','septiembre',
+                    'octubre','noviembre','diciembre']
     meses_numero = [1,2,3,4,5,6,7,8,9,10,11,12]
     meses = dict(zip(meses_nombre,meses_numero))
 
@@ -90,13 +90,13 @@ def cantidad_filmaciones_mes(nombre_mes):
     if nombre_mes not in meses:
         return {'Error': f"El mes '{nombre_mes}' no es valido. Por favor ingresa un mes valido."}
 
-    cantidad_pelis=  int((data_movies["release_date"].dt.month == meses[nombre_mes]).sum())
+    cantidad_pelis=  int((data_movies['release_date'].dt.month == meses[nombre_mes]).sum())
     return {
         'Total de peliculas estrenadas': cantidad_pelis,
     }
 
 # Endpoint para cantidad de filmaciones por dia
-@app.get("/cantidad_filmaciones_dia/{nombre_dia}")
+@app.get('/cantidad_filmaciones_dia/{nombre_dia}')
 def cantidad_filmaciones_dia(nombre_dia):
     """
     Devuelve la cantidad de peliculas estrenadas en un dia especifico de la semana.
@@ -104,7 +104,7 @@ def cantidad_filmaciones_dia(nombre_dia):
     Parametros:
     -----------
     Dia : str
-        El nombre del dia en español (sin acentos). Por ejemplo: "lunes", "martes", etc.
+        El nombre del dia en español (sin acentos). Por ejemplo: 'lunes', 'martes', etc.
 
     Retorna:
     --------
@@ -113,7 +113,7 @@ def cantidad_filmaciones_dia(nombre_dia):
     """
 
     # Lo siguiente es para comparar con los dias del release_date
-    dias_nombre = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"]
+    dias_nombre = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo']
     dias_numero = [1,2,3,4,5,6,7]
     dias = dict(zip(dias_nombre,dias_numero))
 
@@ -122,14 +122,14 @@ def cantidad_filmaciones_dia(nombre_dia):
     if nombre_dia not in dias:
         return {'Error': f"El dia '{nombre_dia}' no es valido. Por favor ingresa un dia valido."}
 
-    cantidad_pelis=  int((data_movies["release_date"].dt.dayofweek == dias[nombre_dia]).sum())
+    cantidad_pelis=  int((data_movies['release_date'].dt.dayofweek == dias[nombre_dia]).sum())
     
     return {
         'Total de peliculas estrenadas': cantidad_pelis,
     }
 
 # Endpoint para obtener score/popularidad de un titulo
-@app.get("/score_titulo/{titulo_de_la_filmacion}")
+@app.get('/score_titulo/{titulo_de_la_filmacion}')
 def score_titulo(titulo_de_la_filmacion):
     """
     Devuelve el titulo, año de estreno y la popularidad de una pelicula especifica.
@@ -166,7 +166,7 @@ def score_titulo(titulo_de_la_filmacion):
 
 
 # Endpoint para obtener los votos de un titulo
-@app.get("/votos_titulo/{titulo}")
+@app.get('/votos_titulo/{titulo}')
 def votos_titulo(titulo_de_la_filmacion):
     """
     Devuelve la cantidad de votos y el promedio de votos de una pelicula especifica si tiene al menos 2000 votos.
@@ -207,7 +207,7 @@ def votos_titulo(titulo_de_la_filmacion):
 
 # Endpoint para obtener informacion sobre un actor
 # cantidad de pelicula, retorno.
-@app.get("/get_actor/{nombre_actor}")
+@app.get('/get_actor/{nombre_actor}')
 def get_actor(nombre_actor):
     """
     Devuelve informacion sobre el exito de un actor basado en el retorno de las peliculas en las que ha participado.
@@ -251,7 +251,7 @@ def get_actor(nombre_actor):
 
 # Endpoint para obtener informacion de un director.
 # Lista de peliculas, retorno.
-@app.get("/get_director/{nombre_director}")
+@app.get('/get_director/{nombre_director}')
 def get_director(nombre_director):
     """
     Devuelve informacion sobre el exito de un director basado en las peliculas que ha dirigido.
@@ -295,7 +295,7 @@ def get_director(nombre_director):
 
 
 # Endpoint para obtener 5 recomendaciones de un titulo dado
-@app.get("/recomendacion/{titulo}")
+@app.get('/recomendacion/{titulo}')
 def recomendacion(titulo):
     """
     Devuelve una lista de peliculas recomendadas en base a la similitud de coseno del titulo proporcionado.

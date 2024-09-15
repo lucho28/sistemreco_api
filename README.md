@@ -65,7 +65,7 @@ Otro recorte que tuve que hacer es tomar un genero de peliculas dato que al desp
 
 Entonces lo que hice fue recordar el dataset data_movies en solo las peliculas que son de animacion y tiene aproximadamente 2000 registros.
 
-Quizas estoy intervenga en el feacture que le damos a la matriz de la similitud del coseno, asi que agregamos el overview y el año de estreno (release_year).
+Quizas estoy intervenga en el features que le damos a la matriz de la similitud del coseno, asi que agregamos el overview y el año de estreno (release_year).
 
 A partir de aqui se realizaron las funciones que se pedian teniendo en cuenta el chequeo de los datos de entrada y que las salidas sigan un mismo lineamiento (Diccionarios).
 
