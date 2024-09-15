@@ -273,7 +273,7 @@ def get_director(nombre_director):
     director_peliculas = data_credits_directores[data_credits_directores['director'].str.lower() == nombre_director.lower()]
 
     # Para que no me duplique
-    director_peliculas = director_peliculas.drop_duplicates(subset=['id'])
+    director_peliculas = director_peliculas.drop_duplicates(subset=['id','director'])
     
     # Uno con el dataset de peliculas para obtener los detalles de cada una
     director_peliculas_detalles = pd.merge(director_peliculas, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
