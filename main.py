@@ -269,19 +269,18 @@ def get_director(nombre_director):
         Si el director no es encontrado, devuelve un mensaje indicando que no fue encontrado en los registros.
     """
     
-    # Obtengo del dataset de directores las películas dirigidas por el director
+    # Obtengo del dataset de directores las peliculas dirigidas por el director
     director_peliculas = data_credits_directores[data_credits_directores['director'].str.lower() == nombre_director.lower()]
 
-    # Para que no me duplique
-    director_peliculas = director_peliculas.drop_duplicates(subset=['id', 'director'])
     
+        
     # Uno con el dataset de peliculas para obtener los detalles de cada una
     director_peliculas_detalles = pd.merge(director_peliculas, 
                                            data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], 
                                            on='id', 
                                            how='left')
 
-    # Eliminar duplicados basados en el título y la fecha de lanzamiento para evitar múltiples entradas de la misma película
+    # Para que no me duplique
     director_peliculas_detalles = director_peliculas_detalles.drop_duplicates(subset=['title', 'release_date'])
 
     # Verificar si el director ha dirigido alguna película
