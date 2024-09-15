@@ -273,17 +273,23 @@ def get_director(nombre_director):
     director_peliculas = data_credits_directores[data_credits_directores['director'].str.lower() == nombre_director.lower()]
 
     # Para que no me duplique
-    director_peliculas = director_peliculas.drop_duplicates(subset=['id','director'])
+    director_peliculas = director_peliculas.drop_duplicates(subset=['id', 'director'])
     
     # Uno con el dataset de peliculas para obtener los detalles de cada una
-    director_peliculas_detalles = pd.merge(director_peliculas, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
+    director_peliculas_detalles = pd.merge(director_peliculas, 
+                                           data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], 
+                                           on='id', 
+                                           how='left')
+
+    # Eliminar duplicados basados en el título y la fecha de lanzamiento para evitar múltiples entradas de la misma película
+    director_peliculas_detalles = director_peliculas_detalles.drop_duplicates(subset=['title', 'release_date'])
 
     # Verificar si el director ha dirigido alguna película
     if director_peliculas_detalles.empty:
         return f"El director {nombre_director} no ha sido encontrado en los registros."
 
     # Calcular el éxito total del director (sumando el retorno de todas sus películas)
-    total_retorno = round(director_peliculas_detalles['return'].sum(),2)
+    total_retorno = round(director_peliculas_detalles['return'].sum(), 2)
 
     # Preparar la lista de películas con sus detalles
     peliculas_detalles = director_peliculas_detalles[['title', 'release_date', 'return', 'budget', 'revenue']]
