@@ -137,7 +137,7 @@ def score_titulo(titulo_de_la_filmacion):
     Parametros:
     -----------
     titulo_de_la_filmacion : str
-        El titulo de la pelicula a buscar. No es sensible a mayusculas/minusculas.
+        El titulo de la pelicula a buscar.
 
     Retorna:
     --------
@@ -272,7 +272,9 @@ def get_director(nombre_director):
     # Obtengo del dataset de directores las películas dirigidas por el director
     director_peliculas = data_credits_directores[data_credits_directores['director'].str.lower() == nombre_director.lower()]
 
-
+    # Para que no me duplique
+    director_peliculas = director_peliculas.drop_duplicates(subset=['id'])
+    
     # Uno con el dataset de peliculas para obtener los detalles de cada una
     director_peliculas_detalles = pd.merge(director_peliculas, data_movies[['id', 'title', 'release_date', 'return', 'budget', 'revenue']], on='id', how='left')
 
