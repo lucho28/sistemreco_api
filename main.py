@@ -311,6 +311,7 @@ def recomendacion(titulo):
     -----------
     title : str
         El titulo de la pelicula para la cual se desea obtener recomendaciones. No es sensible a mayusculas/minusculas.
+        Se recuerda que el datasets esta recortado al genero Animacion.
 
     Retorna:
     --------
