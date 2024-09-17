@@ -56,15 +56,17 @@ La fuente de datos original para este proyecto fueron dos archivos en el formato
 
 La metodología abordada fue comenzar primero con el datasets de películas llamado data_movies, transformando los datos, revisando valores nulos, columnas candidatas a ser eliminadas, etc.
 
-Considerando que lo que se pide en un MVP se eliminaron algunas columnas mas de las recomendadas. Siguiendo el mismo lineamiento para el dataset data_credits solo de desanidaron los actores y directores con los id de las películas.
+Considerando que lo que se pide en un MVP se eliminaron algunas columnas mas de las recomendadas. Siguiendo el mismo lineamiento para el dataset data_credits solo se desanidaron los actores y directores con los id de las películas.
 
-Esto me sirvió para poder realizar las funciones get_actor y get_director y traer la información de ellos con sus respectivos retornos y puntuaciones.
+Esto me sirvió para poder realizar las funciones get_actor y get_director, y traer la información de ellos con sus respectivos retornos y puntuaciones.
 
-Otro recorte que tuve que hacer es tomar un genero de películas dato que al desplegar la api me excedía del limite de memoria brindado por la versión free de redner.
+Otro recorte que tuve que hacer es tomar un genero de películas dado que al desplegar la api me excedía del limite de memoria brindado por la versión free de Render.
 
-Entonces lo que hice fue recordar el dataset data_movies en solo las películas que son de animación y tiene aproximadamente 2000 registros.
+Entonces lo que hice fue recortar el dataset data_movies en solo las películas que son de animación y tiene aproximadamente 2000 registros.
 
-Quizás estoy intervenga en el features que le damos a la matriz de la similitud del coseno, así que agregamos el overview y el año de estreno (release_year).
+Quizás esto intervenga en el features que le damos a la matriz de la similitud del coseno, así que agregamos el overview y el año de estreno (release_year).
+
+Es decir, se hizo una combinacion de genero, sinopsis y años de estreno en una sola matriz y luego se calculo la similitud del coseno en funcion de esas caracteristicas.
 
 A partir de aquí se realizaron las funciones que se pedían teniendo en cuenta el chequeo de los datos de entrada y que las salidas sigan un mismo lineamiento (Diccionarios).
 
